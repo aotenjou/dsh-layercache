@@ -1,0 +1,89 @@
+{
+  "name": "dsh-layercache",
+  "version": "0.1.0",
+  "description": "TVCache-style stateful tool prefix caching for DeepSeek Harness, backed by LayerFS",
+  "type": "module",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24.9",
+    "dsh": "0.2.2-rc.5"
+  },
+  "exports": {
+    ".": "./plugin/index.js",
+    "./core": "./src/index.js",
+    "./layerfs": "./src/backends/layerfs.js",
+    "./local": "./src/backends/local.js",
+    "./server": "./src/server.js",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "bin": {
+    "layercache": "./src/cli.js"
+  },
+  "files": [
+    "src/**/*.js",
+    "docs/*.md",
+    "docs/receipts/*.txt",
+    "examples/*.js",
+    "examples/*.py",
+    "scripts/*.js",
+    "scripts/*.py",
+    "test/*.js",
+    "test/*.py",
+    "README.md",
+    "README.zh-CN.md",
+    "LICENSE",
+    "NOTICE",
+    "THIRD_PARTY_NOTICES.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "CHANGELOG.md",
+    "plugin/*.js",
+    "cordis.patch.yml",
+    "layerfs.json",
+    "logo.svg"
+  ],
+  "scripts": {
+    "test": "node --test --test-timeout=90000 test/backend.test.js test/cache.test.js test/server.test.js test/dsh.test.js",
+    "test:python": "python -m unittest discover -s test -p test_python.py -v",
+    "test:layerfs": "node --test test/layerfs.integration.js test/layerfs.shell.integration.js",
+    "demo": "node examples/branching.js",
+    "benchmark": "node examples/benchmark.js",
+    "check": "node scripts/check.js",
+    "test:dsh": "node --test --test-timeout=90000 test/dsh.test.js"
+  },
+  "peerDependencies": {
+    "@layerfs/agent": "1.1.0",
+    "@deepseek-ai/cordis": "~4.1.0",
+    "@deepseek-ai/schemastery": "~3.19.0",
+    "@deepseek-ai/dsh-tools": "0.2.2-rc.5"
+  },
+  "peerDependenciesMeta": {
+    "@layerfs/agent": {
+      "optional": true
+    }
+  },
+  "main": "plugin/index.js",
+  "icon": "./logo.svg",
+  "author": "aotenjou",
+  "homepage": "https://github.com/aotenjou/dsh-layercache",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aotenjou/dsh-layercache.git"
+  },
+  "bugs": {
+    "url": "https://github.com/aotenjou/dsh-layercache/issues"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.1.0",
+    "@deepseek-ai/schemastery": "3.19.0",
+    "@deepseek-ai/dsh-tools": "0.2.2-rc.5",
+    "@deepseek-ai/dsh-system-prompt": "0.2.2-rc.5",
+    "@deepseek-ai/dsh-tool-executor-native": "0.2.2-rc.5"
+  }
+}

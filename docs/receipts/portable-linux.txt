@@ -1,0 +1,148 @@
+TAP version 13
+# Subtest: LayerFS shell commits even a nonzero exit, then unmounts and closes
+ok 1 - LayerFS shell commits even a nonzero exit, then unmounts and closes
+  ---
+  duration_ms: 1.865528
+  type: 'test'
+  ...
+# Subtest: LayerFS refuses uncertain exec without repeating it and still attempts cleanup
+ok 2 - LayerFS refuses uncertain exec without repeating it and still attempts cleanup
+  ---
+  duration_ms: 0.715644
+  type: 'test'
+  ...
+# Subtest: readText pages complete lines and rejects silently truncated long lines
+ok 3 - readText pages complete lines and rejects silently truncated long lines
+  ---
+  duration_ms: 0.226525
+  type: 'test'
+  ...
+# Subtest: close drains even noncacheable execution before releasing the backend
+ok 4 - close drains even noncacheable execution before releasing the backend
+  ---
+  duration_ms: 29.960062
+  type: 'test'
+  ...
+# Subtest: time buckets invalidate a whole state chain and allow fresh records
+ok 5 - time buckets invalidate a whole state chain and allow fresh records
+  ---
+  duration_ms: 17.118428
+  type: 'test'
+  ...
+# Subtest: prefix hits restore files; divergent rollouts remain isolated
+ok 6 - prefix hits restore files; divergent rollouts remain isolated
+  ---
+  duration_ms: 88.48173
+  type: 'test'
+  ...
+# Subtest: read-only calls do not extend the state chain
+ok 7 - read-only calls do not extend the state chain
+  ---
+  duration_ms: 25.676317
+  type: 'test'
+  ...
+# Subtest: canonical object order; strict JSON; null results are valid hits
+ok 8 - canonical object order; strict JSON; null results are valid hits
+  ---
+  duration_ms: 10.101463
+  type: 'test'
+  ...
+# Subtest: task, context, tool version, and base snapshot separate cache identities
+ok 9 - task, context, tool version, and base snapshot separate cache identities
+  ---
+  duration_ms: 17.905611
+  type: 'test'
+  ...
+# Subtest: concurrent identical prefixes execute once
+ok 10 - concurrent identical prefixes execute once
+  ---
+  duration_ms: 44.823169
+  type: 'test'
+  ...
+# Subtest: failed tool publishes no cache node and leaves the old snapshot intact
+ok 11 - failed tool publishes no cache node and leaves the old snapshot intact
+  ---
+  duration_ms: 13.424679
+  type: 'test'
+  ...
+# Subtest: uncached calls create a barrier for descendant reuse
+ok 12 - uncached calls create a barrier for descendant reuse
+  ---
+  duration_ms: 26.956647
+  type: 'test'
+  ...
+# Subtest: read-only handlers cannot mutate state
+ok 13 - read-only handlers cannot mutate state
+  ---
+  duration_ms: 5.643996
+  type: 'test'
+  ...
+# Subtest: restart keeps the tree and immutable environment state
+ok 14 - restart keeps the tree and immutable environment state
+  ---
+  duration_ms: 19.548545
+  type: 'test'
+  ...
+# Subtest: one index owner; prune removes reuse records without claiming storage GC
+ok 15 - one index owner; prune removes reuse records without claiming storage GC
+  ---
+  duration_ms: 18.970724
+  type: 'test'
+  ...
+# Subtest: chunk encoding preserves large UTF-8/null payloads and detects corruption
+ok 16 - chunk encoding preserves large UTF-8/null payloads and detects corruption
+  ---
+  duration_ms: 24.666284
+  type: 'test'
+  ...
+# Subtest: invalid later calls are rejected before earlier side effects
+ok 17 - invalid later calls are rejected before earlier side effects
+  ---
+  duration_ms: 6.186326
+  type: 'test'
+  ...
+# Subtest: rollout sessions retain noncacheable effects across growing histories
+ok 18 - rollout sessions retain noncacheable effects across growing histories
+  ---
+  duration_ms: 26.140086
+  type: 'test'
+  ...
+# Subtest: rollout history is append-only, serialized, isolated by task and explicitly closed
+ok 19 - rollout history is append-only, serialized, isolated by task and explicitly closed
+  ---
+  duration_ms: 17.953189
+  type: 'test'
+  ...
+# Subtest: a failed rollout refuses later execution instead of replaying uncertain effects
+ok 20 - a failed rollout refuses later execution instead of replaying uncertain effects
+  ---
+  duration_ms: 4.733508
+  type: 'test'
+  ...
+# Subtest: rollout admission is bounded and releasing a rollout frees capacity
+ok 21 - rollout admission is bounded and releasing a rollout frees capacity
+  ---
+  duration_ms: 3.809108
+  type: 'test'
+  ...
+# Subtest: real HTTP run, authentication, tree, stats, prune, malformed requests
+ok 22 - real HTTP run, authentication, tree, stats, prune, malformed requests
+  ---
+  duration_ms: 123.026437
+  type: 'test'
+  ...
+# Subtest: oversized HTTP input gets a structured 413 response
+ok 23 - oversized HTTP input gets a structured 413 response
+  ---
+  duration_ms: 3008.2184
+  type: 'test'
+  ...
+1..23
+# tests 23
+# suites 0
+# pass 23
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3332.368583

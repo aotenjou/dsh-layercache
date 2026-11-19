@@ -1,0 +1,39 @@
+
+> dsh-layercache@0.1.0 test
+> node --test --test-timeout=90000 test/backend.test.js test/cache.test.js test/server.test.js test/dsh.test.js
+
+✔ LayerFS shell commits even a nonzero exit, then unmounts and closes (1.2836ms)
+✔ LayerFS refuses uncertain exec without repeating it and still attempts cleanup (0.454ms)
+✔ readText pages complete lines and rejects silently truncated long lines (0.1797ms)
+✔ close drains even noncacheable execution before releasing the backend (53.0471ms)
+✔ time buckets invalidate a whole state chain and allow fresh records (30.5324ms)
+✔ prefix hits restore files; divergent rollouts remain isolated (108.9617ms)
+✔ read-only calls do not extend the state chain (54.86ms)
+✔ canonical object order; strict JSON; null results are valid hits (22.8673ms)
+✔ task, context, tool version, and base snapshot separate cache identities (46.9529ms)
+✔ concurrent identical prefixes execute once (57.8811ms)
+✔ failed tool publishes no cache node and leaves the old snapshot intact (39.0333ms)
+✔ uncached calls create a barrier for descendant reuse (72.7737ms)
+✔ read-only handlers cannot mutate state (13.2958ms)
+✔ restart keeps the tree and immutable environment state (48.1924ms)
+✔ one index owner; prune removes reuse records without claiming storage GC (67.2836ms)
+✔ chunk encoding preserves large UTF-8/null payloads and detects corruption (18.6659ms)
+✔ invalid later calls are rejected before earlier side effects (12.9895ms)
+✔ rollout sessions retain noncacheable effects across growing histories (94.7941ms)
+✔ rollout history is append-only, serialized, isolated by task and explicitly closed (42.0033ms)
+✔ a failed rollout refuses later execution instead of replaying uncertain effects (11.4937ms)
+✔ rollout admission is bounded and releasing a rollout frees capacity (8.0527ms)
+✔ real Cordis/dsh pipeline registers, branches, replays, logs metadata, and unloads (162.1324ms)
+✔ incremental uncached effects execute once; labels belong to a dsh session (83.6636ms)
+✔ backend mismatch, missing owning session, bad arguments, and policy denial fail before mutation (18.811ms)
+✔ one failed mutation response poisons its label instead of replaying (5.4101ms)
+✔ real HTTP run, authentication, tree, stats, prune, malformed requests (126.6627ms)
+✔ oversized HTTP input gets a structured 413 response (5.5624ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 856.6689

@@ -1,0 +1,11 @@
+node_modules/
+*.tgz
+.layercache/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+build/
+dist/
+*.log
+.env

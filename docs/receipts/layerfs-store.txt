@@ -1,0 +1,16 @@
+TAP version 13
+# Subtest: real LayerFS Store: branching, large results, persisted trie, reopen, pruning
+ok 1 - real LayerFS Store: branching, large results, persisted trie, reopen, pruning
+  ---
+  duration_ms: 3747.958617
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3944.120372

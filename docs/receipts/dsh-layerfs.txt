@@ -1,0 +1,17 @@
+{"image": "sha256:5ba3c1ded6eada2ea16582327a87c672fb3889fca362ee3ac0d78ed742b583c0", "volume": "layercache-verify-51dc0e0c6864-store", "desktop": true}
+TAP version 13
+# Subtest: dsh tool pipeline -> HTTP -> real LayerFS Store/FUSE: divergence, replay, uncached session
+ok 1 - dsh tool pipeline -> HTTP -> real LayerFS Store/FUSE: divergence, replay, uncached session
+  ---
+  duration_ms: 10368.489561
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11518.002932

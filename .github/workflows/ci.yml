@@ -1,0 +1,34 @@
+name: portable-checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [24]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: python -m unittest discover -s test -p test_python.py -v
+      - run: npm run check
+      - run: npm run demo
+      - run: npm run benchmark
+      - run: npm pack
+      - run: python -m pip wheel --no-deps --wheel-dir dist .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages-${{ matrix.os }}-${{ matrix.node }}
+          path: |
+            *.tgz
+            dist/*.whl

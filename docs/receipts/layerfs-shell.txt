@@ -1,0 +1,17 @@
+{"image": "sha256:b774d993885c47eca14db241ba8cc7e5789235142f76e4a2a6a65ec350a1bac0", "volume": "layercache-verify-4859b9055766-store", "desktop": true}
+TAP version 13
+# Subtest: real Docker/FUSE Workspace: shell commit, branch divergence, cache hit, cleanup
+ok 1 - real Docker/FUSE Workspace: shell commit, branch divergence, cache hit, cleanup
+  ---
+  duration_ms: 11652.570572
+  type: 'test'
+  ...
+1..1
+# tests 1
+# suites 0
+# pass 1
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11766.394696

@@ -1,0 +1,35 @@
+name: real-layerfs-qualification
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: Ephemeral-AI-Lab/layerfs
+          ref: 7d42d0b506eac64801864923149f796f5c7c8d7e
+          path: work/layerfs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: npm ci --ignore-scripts
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build pinned LayerFS
+        working-directory: work/layerfs
+        run: |
+          cargo +stable build --release --locked -p layerfs-node -p layerfs-daemon
+          cp target/release/liblayerfs_node.so engine/crates/layerfs-node/layerfs.node
+      - name: Real Store integration
+        env:
+          LAYERCACHE_TEST_SDK: file://${{ github.workspace }}/work/layerfs/api/agent/src/index.js
+          LAYERFS_NATIVE: ${{ github.workspace }}/work/layerfs/engine/crates/layerfs-node/layerfs.node
+        run: sudo --preserve-env=LAYERCACHE_TEST_SDK,LAYERFS_NATIVE "$(command -v node)" --test test/layerfs.integration.js
+      - name: Real Docker and FUSE integration
+        run: |
+          docker pull node:24-bookworm-slim
+          python3 scripts/test-layerfs-docker.py --dsh --image node:24-bookworm-slim --repo work/layerfs --addon work/layerfs/engine/crates/layerfs-node/layerfs.node --daemon work/layerfs/target/release/layerfs-daemon

@@ -1,0 +1,10 @@
+LayerCache
+Copyright 2026 LayerCache contributors
+
+This project adapts the tool-call graph and stateful tool-value caching ideas
+described in TVCache (https://github.com/TVCache/TVCache), licensed Apache-2.0.
+It uses the public LayerFS API (https://github.com/Ephemeral-AI-Lab/layerfs),
+licensed MIT, as an optional external runtime dependency.
+
+LayerCache is an independent implementation and is not affiliated with or
+endorsed by the upstream projects. See THIRD_PARTY_NOTICES.md for source pins.

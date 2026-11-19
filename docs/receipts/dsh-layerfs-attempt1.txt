@@ -1,0 +1,12 @@
+{"image": "sha256:5ba3c1ded6eada2ea16582327a87c672fb3889fca362ee3ac0d78ed742b583c0", "volume": "layercache-verify-ac505662a30d-store", "desktop": true}
+Exception in thread Thread-7 (_readerthread):
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\ProgramData\anaconda3\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\ProgramData\anaconda3\Lib\subprocess.py", line 1599, in _readerthread
+    buffer.append(fh.read())
+                  ^^^^^^^^^
+UnicodeDecodeError: 'gbk' codec can't decode byte 0x94 in position 2: illegal multibyte sequence
+None
