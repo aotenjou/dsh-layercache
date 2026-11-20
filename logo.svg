@@ -1,10 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title description">
   <title id="title">LayerCache</title>
-  <rect width="128" height="128" rx="28" fill="#101A2D"/>
-  <g fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M24 83 64 106 104 83" stroke="#799AFF"/>
-    <path d="M24 67 64 90 104 67" stroke="#7BD6EE"/>
-    <path d="M24 47 64 24 104 47 64 70Z" fill="#8AF0CB" stroke="#8AF0CB"/>
+  <desc id="description">A replay arrow encircles a tool-call prefix that splits into two cached results.</desc>
+  <circle cx="64" cy="64" r="60" fill="#281D35"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M42 100 A42 42 0 1 1 96 91 M96 77l-1 16 16-2" stroke="#FF985E" stroke-width="8"/>
+    <path d="M64 81V68m0 0L51 55m13 13 13-13" stroke="#FFE0A3" stroke-width="7"/>
   </g>
-  <path d="M75.5 34.3a12 12 0 0 0-13.8 12.9L48.5 56.5a4.5 4.5 0 0 0 5.2 7.4l13.2-9.3a12 12 0 0 0 17.3-12.1l-7.5 5.3-5.6-1.4.6-5.8 7.5-5.3a12 12 0 0 0-3.7-1Z" fill="#101A2D"/>
+  <g fill="#FFE0A3">
+    <rect x="44" y="46" width="14" height="14" rx="3"/>
+    <rect x="70" y="46" width="14" height="14" rx="3"/>
+  </g>
 </svg>
