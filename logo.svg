@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
-  <title>DSH LayerCache</title>
-  <rect width="128" height="128" rx="24" fill="#132333"/>
-  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="6">
-    <path d="M28 39 64 21 100 39 64 57Z" stroke="#8dd9cc"/>
-    <path d="m28 56 36 18 36-18M28 73l36 18 36-18" stroke="#65b9e9"/>
-    <path d="M64 91v13m0-7H38v9m26-9h26v9" stroke="#f3c878"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">LayerCache</title>
+  <rect width="128" height="128" rx="28" fill="#101A2D"/>
+  <g fill="none" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 83 64 106 104 83" stroke="#799AFF"/>
+    <path d="M24 67 64 90 104 67" stroke="#7BD6EE"/>
+    <path d="M24 47 64 24 104 47 64 70Z" fill="#8AF0CB" stroke="#8AF0CB"/>
   </g>
-  <g fill="#f3c878"><circle cx="38" cy="108" r="5"/><circle cx="90" cy="108" r="5"/></g>
+  <path d="M75.5 34.3a12 12 0 0 0-13.8 12.9L48.5 56.5a4.5 4.5 0 0 0 5.2 7.4l13.2-9.3a12 12 0 0 0 17.3-12.1l-7.5 5.3-5.6-1.4.6-5.8 7.5-5.3a12 12 0 0 0-3.7-1Z" fill="#101A2D"/>
 </svg>
