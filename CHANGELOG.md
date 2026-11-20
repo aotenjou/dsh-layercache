@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Added checkpoint expiry, parent state validation, shared resource versions
+  and startup cleanup. `--ttl-ms` now sets the default checkpoint lifetime.
+- Added tool preflight, explicit replay policies and conditional publication.
+  Legacy records remain available through the unfiltered tree and prune APIs.
+- Moved cache publication to a bounded background queue. Compatible rollouts
+  can reuse pending results and checkpoints in the same process.
+
 ## DSH plugin 0.1.0 — 2026-11-19
 
 - Cordis plugin/bundle for dsh 0.2.2-rc.5, with tvcache_run and tvcache_close.

@@ -41,6 +41,9 @@ class ClientIntegration(unittest.TestCase):
         first = self.client.run("sync", calls)
         second = self.client.run("sync", calls)
         self.assertEqual(first["value"], "hello")
+        self.assertEqual(first["steps"][0]["publication"], "pending")
+        self.assertIsInstance(first["steps"][0]["revision"], str)
+        self.assertNotIn("generation", first["steps"][0])
         self.assertEqual(second["hits"], 2)
 
     def test_errors_keep_machine_readable_code(self):
@@ -50,6 +53,27 @@ class ClientIntegration(unittest.TestCase):
         with self.assertRaises(LayerCacheError) as error:
             Client(self.url, token="wrong").health()
         self.assertEqual(error.exception.code, "Unauthorized")
+
+    def test_preflight_and_resource_refresh(self):
+        candidates = ["file.write", "missing"]
+        prepared = self.client.prepare("preflight", candidates)
+        self.assertEqual(prepared["unknown_tools"], ["missing"])
+        self.assertEqual(self.client.refresh_resources([{"name": "catalog", "version": "v1"}])["resources"],
+                         [{"name": "catalog", "version": "v1", "expiresAt": None}])
+
+        async def run():
+            async with AsyncExecutor("preflight", self.client, candidates) as executor:
+                history = [ToolCall("file.write", {"path": "/value", "content": "one"})]
+                await executor.execute(history)
+                self.assertEqual(executor.preflight_result, prepared)
+                self.assertEqual(executor.last_result["steps"][0]["publication"], "pending")
+                history.append(ToolCall("file.read", {"path": "/value"}))
+                self.assertEqual(await executor.execute(history), "one")
+                self.assertEqual(executor.last_result["unknown_tools"], ["file.read", "missing"])
+                self.assertEqual(executor.last_result["steps"][1]["source"], "execution")
+                self.assertEqual(executor.last_result["steps"][1]["publication"], "skipped")
+
+        asyncio.run(run())
 
     def test_async_full_history_training_and_branch_isolation(self):
         async def rollout(suffix):

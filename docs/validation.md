@@ -24,8 +24,8 @@ but have not been executed on a hosted remote.
 
 | Command / test | Result | Evidence scope |
 | --- | --- | --- |
-| `npm test` | PASS, 23 tests on Windows and Linux | state restoration/divergence, read-only elision, JSON identity, scope isolation, concurrent misses, failure atomicity, uncached barriers/sessions, reopen, lock ownership, prune, result chunks, HTTP/body limit, TTL, cleanup, drain |
-| `python -m unittest discover -s test -p test_python.py -v` | PASS, 4 tests | real Node HTTP service, Python sync/async calls, errors/auth, concurrent training rollouts, uncached incremental effects execute once |
+| `npm test` | PASS, 40 tests on Windows and Linux | state restoration/divergence, read-only elision, JSON identity, scope isolation, random-tool policy, parent/resource/TTL validation, concurrent single-flight, conditional publication, legacy records, multi-client dsh pipeline, HTTP/body limit, cleanup and drain |
+| `python -m unittest discover -s test -p test_python.py -v` | PASS, 5 tests | real Node HTTP service, Python sync/async calls, preflight/resource refresh, errors/auth, concurrent rollouts, uncached incremental effects execute once |
 | `node examples/branching.js` | PASS | A executes 3, B executes 2/hits 1, A replay executes 0/hits 3; file values checked |
 | `node examples/benchmark.js` | PASS | 4 synthetic trajectories, 12 uncached executions vs 4 cached executions; values checked |
 | `node scripts/check.js` | PASS | JavaScript parsing of source/examples/tests/scripts |

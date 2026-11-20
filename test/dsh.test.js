@@ -33,6 +33,8 @@ test('real Cordis/dsh pipeline registers, branches, replays, logs metadata, and 
   const a = await run('A', [write('shared'), append('A'), read]);
   assert.equal(a.result.isError, false); assert.equal(a.value.value, 'sharedA'); assert.equal(a.value.executed, 3);
   assert.equal(a.result.meta.executed, 3);
+  assert.equal(a.value.steps[2].publication, 'pending');
+  assert.ok(!Object.hasOwn(a.value.steps[2], 'generation'));
   const b = await run('B', [write('shared'), append('B'), read]);
   assert.equal(b.value.value, 'sharedB'); assert.equal(b.value.cache_hits, 1); assert.equal(b.value.executed, 2);
   const replay = await run('replay', [write('shared'), append('A'), read]);
@@ -63,6 +65,24 @@ test('incremental uncached effects execute once; labels belong to a dsh session'
   await invoke(ctx, a, 'tvcache_close', { rollout: 'same' });
   assert.equal((await run(a, history)).result.isError, true);
   assert.equal(cache.stats().rollouts, 1);
+});
+
+test('dsh preflights candidates and reports undeclared tools on a growing history', async t => {
+  const { service } = await fixture(t);
+  const { ctx } = await mount(service.url);
+  t.after(() => ctx.fiber.dispose());
+  const agent = caller('preflight');
+  const candidates = { task_id: 'sample', candidate_tools: ['file.write', 'missing'] };
+  const prepared = await invoke(ctx, agent, 'tvcache_prepare', candidates);
+  assert.equal(prepared.result.isError, false);
+  assert.deepEqual(prepared.value.unknown_tools, ['missing']);
+  const base = { ...candidates, rollout: 'a' };
+  const first = await invoke(ctx, agent, 'tvcache_run', { ...base, history: [write('value')] });
+  assert.deepEqual(first.value.preflight, prepared.value);
+  const next = await invoke(ctx, agent, 'tvcache_run', { ...base, history: [write('value'), read] });
+  assert.equal(next.value.value, 'value');
+  assert.deepEqual(next.value.unknown_tools, ['file.read', 'missing']);
+  assert.equal(next.value.continued, 1);
 });
 
 test('backend mismatch, missing owning session, bad arguments, and policy denial fail before mutation', async t => {

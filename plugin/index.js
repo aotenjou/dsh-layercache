@@ -39,19 +39,41 @@ export async function apply(ctx, config) {
           cache: { type: 'boolean', description: 'false disables reuse from this call onward' },
         },
       } },
+      candidate_tools: { type: 'array', items: { type: 'string' }, description: 'Tools expected for this task, scanned before the first invocation' },
     },
     output: {
       schema: { type: 'object', additionalProperties: false, properties: {
         task_id: { type: 'string', required: true }, rollout: { type: 'string', required: true },
         value: { type: 'json', required: true }, ref: { type: 'string', required: true },
         executed: { type: 'integer', required: true }, cache_hits: { type: 'integer', required: true }, continued: { type: 'integer', required: true },
+        steps: { type: 'array', required: true, items: {
+          type: 'object', additionalProperties: false, properties: {
+            hit: { type: 'boolean', required: true }, source: { type: 'string', required: true },
+            publication: { type: 'string' }, revision: { type: 'string' }, generation: { type: 'integer' }
+          }
+        } },
+        unknown_tools: { type: 'array', required: true, items: { type: 'string' } },
+        preflight: { type: 'json', required: true },
       } },
       render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }],
-      presentationMeta: (_args, { task_id, rollout, ref, executed, cache_hits, continued }) => ({ task_id, rollout, ref, executed, cache_hits, continued }),
+      presentationMeta: (_args, { task_id, rollout, ref, executed, cache_hits, continued, unknown_tools }) => ({ task_id, rollout, ref, executed, cache_hits, continued, unknown_tools }),
     },
     presentCall: args => ({ card: 'generic', kind: 'execute', title: `TVCache: ${args.task_id} / ${args.rollout}`, rawInput: args.history }),
     presentResult: (_args, result) => result.meta?.cache_hits === undefined ? undefined : ({ card: 'generic', title: `TVCache: ${result.meta.cache_hits} hits, ${result.meta.executed} executed` }),
     execute: (args, exec) => rollouts.run(owner(exec), args, exec.signal),
+  }));
+  ctx.tools.register(defineTool({
+    name: 'tvcache_prepare',
+    description: 'Preflight the candidate tool list for a task before creating rollout executions. Unregistered names are reported as unknown and actual calls still require registered implementations.',
+    parameters: {
+      task_id: { type: 'string', required: true },
+      candidate_tools: { type: 'array', required: true, items: { type: 'string' } },
+    },
+    output: {
+      schema: { type: 'json' },
+      render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }],
+    },
+    execute: (args, exec) => client.prepare(args.task_id, args.candidate_tools, exec.signal),
   }));
   ctx.tools.register(defineTool({
     name: 'tvcache_close',

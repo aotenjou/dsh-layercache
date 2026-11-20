@@ -43,6 +43,7 @@ def main():
             "LAYERFS_NATIVE": "/native/layerfs.node", "LAYERFS_DAEMON": "/native/layerfs-daemon",
             "LAYERFS_IMAGE": image, "LAYERFS_VOLUME": volume, "LAYERFS_DOCKER": "/var/run/docker.sock",
             "LAYERFS_STORE_PATH": "/layerfs-store/global/store.sqlite", "LAYERFS_CONTAINER_PREFIX": prefix,
+            "LAYERCACHE_TEST_STORE_DIR": "/layerfs-store",
             "LAYERFS_DAEMON_HOST": "host.docker.internal" if desktop else "127.0.0.1",
         }
         if not desktop:
@@ -54,8 +55,9 @@ def main():
                 parser.error("Run npm ci first to install the fixed dsh packages")
             # These dependencies are JavaScript only; the Linux runtime loads them read-only.
             command += ["--mount", f"type=bind,src={project / 'node_modules'},dst=/layercache/node_modules,readonly"]
-        test_file = "test/dsh.layerfs.integration.js" if args.dsh else "test/layerfs.shell.integration.js"
-        command += ["-w", "/layercache", "--entrypoint", "node", image, "--test", "--test-reporter=tap", "--test-timeout=90000", test_file]
+        workspace_test = "test/dsh.layerfs.integration.js" if args.dsh else "test/layerfs.shell.integration.js"
+        test_files = ["test/layerfs.integration.js", workspace_test]
+        command += ["-w", "/layercache", "--entrypoint", "node", image, "--test", "--test-concurrency=1", "--test-reporter=tap", "--test-timeout=90000", *test_files]
         print(json.dumps({"image": image, "volume": volume, "desktop": desktop}), flush=True)
         result = docker(*command, check=False, timeout=110)
         print(result.stdout, end="")

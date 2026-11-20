@@ -26,14 +26,18 @@ export class LayerFSBackend {
       catch (e) { if (e.code !== 'NameTaken') throw e; }
       await lf.fs.mkdir(backend.index, ROOT + '/nodes', 'LayerCache: initialize index');
       await lf.fs.mkdir(backend.index, ROOT + '/blobs', 'LayerCache: initialize blobs');
-      // Pin even a mutable seed Branch/main to an immutable Commit/Layer once.
+      // Pin main once so new rollouts start from a stable filesystem state.
       const pinned = await lf.branch.fork('lc-base-' + randomUUID().replaceAll('-', ''), seedRef);
       backend.baseRef = pinned.head ?? pinned.base;
       if (!backend.baseRef) throw new CacheError('InvalidState', 'LayerFS returned no immutable base reference');
       return backend;
     } catch (e) { try { if (lf && !client) await lf.close(); } finally { await release(); } throw e; }
   }
-  constructor(client, release) { this.client = client; this.release = release; }
+  constructor(client, release) {
+    this.client = client;
+    this.release = release;
+    this.stagedHashes = new Map();
+  }
   async readText(ref, path) {
     let text = '', line = 1;
     for (;;) {
@@ -81,9 +85,13 @@ export class LayerFSBackend {
     };
   }
   async getRecord(key) {
-    recordKey(key);
+    return this.readRecord(ROOT + '/nodes/' + recordKey(key));
+  }
+  getResources() { return this.readRecord(ROOT + '/resources'); }
+  putResources(value) { return this.writeRecord(ROOT + '/resources', value); }
+  async readRecord(path) {
     let text;
-    try { text = await this.readText(this.index, `${ROOT}/nodes/${key}`); }
+    try { text = await this.readText(this.index, path); }
     catch (e) { if (e.code === 'NoSuchPath') return null; throw e; }
     const manifest = JSON.parse(text), chunks = [];
     if (manifest.schema !== 1 || !/^[a-f0-9]{64}$/.test(manifest.hash) || !Number.isSafeInteger(manifest.chunks) || manifest.chunks < 1) throw new CacheError('CorruptCache', 'Invalid LayerFS cache manifest');
@@ -91,22 +99,66 @@ export class LayerFSBackend {
     return decodeRecord(manifest, chunks);
   }
   async putRecord(key, value) {
-    recordKey(key);
-    const { manifest, chunks } = encodeRecord(value);
-    for (let i = 0; i < chunks.length; i++) await this.client.fs.write(this.index, `${ROOT}/blobs/${manifest.hash}-${i}`, chunks[i], 'LayerCache result chunk');
-    await this.client.fs.write(this.index, `${ROOT}/nodes/${key}`, JSON.stringify(manifest), 'LayerCache publish cache node');
+    return this.writeRecord(ROOT + '/nodes/' + recordKey(key), value);
   }
-  async listRecords() {
+  stageRecord(key, value) {
+    return this.stageWrite(ROOT + '/nodes/' + recordKey(key), value);
+  }
+  async writeRecord(path, value) {
+    const staged = await this.stageWrite(path, value);
+    try { await staged.commit(); }
+    finally { staged.discard(); }
+  }
+  async stageWrite(path, value) {
+    const { manifest, chunks } = encodeRecord(value);
+    const { hash } = manifest;
+    this.stagedHashes.set(hash, (this.stagedHashes.get(hash) ?? 0) + 1);
+    const discard = () => {
+      const count = this.stagedHashes.get(hash);
+      if (count === 1) this.stagedHashes.delete(hash);
+      else this.stagedHashes.set(hash, count - 1);
+    };
+    try {
+      for (let i = 0; i < chunks.length; i++) await this.client.fs.write(this.index, `${ROOT}/blobs/${hash}-${i}`, chunks[i], 'LayerCache result chunk');
+    } catch (error) { discard(); throw error; }
+    return {
+      commit: () => this.client.fs.write(this.index, path, JSON.stringify(manifest), 'LayerCache publish cache record'),
+      discard
+    };
+  }
+  async listNames(path) {
     const keys = [];
     for (let pos = 0; ; ) {
-      const page = await this.client.fs.list(this.index, ROOT + '/nodes', 1000, pos);
+      const page = await this.client.fs.list(this.index, path, 1000, pos);
       keys.push(...page.items.map(i => i.name));
       if (!page.hasMore) break;
       if (!page.items.length) throw new CacheError('CorruptCache', 'Non-advancing LayerFS directory page');
       pos = page.nextPagePos ?? pos + page.items.length;
     }
-    return Promise.all(keys.map(k => this.getRecord(k)));
+    return keys;
   }
-  async removeRecord(key) { await this.client.fs.rm(this.index, `${ROOT}/nodes/${recordKey(key)}`, 'LayerCache expire node'); }
+  async listRecords() {
+    const keys = await this.listNames(ROOT + '/nodes');
+    return Promise.all(keys.map(key => this.getRecord(key)));
+  }
+  async cleanupBlobs() {
+    const keep = new Set();
+    const nodes = await this.listNames(ROOT + '/nodes');
+    for (const path of [ROOT + '/resources', ...nodes.map(key => ROOT + '/nodes/' + recordKey(key))]) {
+      let manifest;
+      try { manifest = JSON.parse(await this.readText(this.index, path)); }
+      catch (error) { if (error.code === 'NoSuchPath') continue; throw error; }
+      for (let index = 0; index < manifest.chunks; index++) keep.add(manifest.hash + '-' + index);
+    }
+    let removed = 0;
+    for (const name of await this.listNames(ROOT + '/blobs')) {
+      if (/^[a-f0-9]{64}-\d+$/.test(name) && !keep.has(name) && !this.stagedHashes.has(name.slice(0, 64))) {
+        await this.client.fs.rm(this.index, ROOT + '/blobs/' + name, 'LayerCache prune unreferenced chunk');
+        removed++;
+      }
+    }
+    return removed;
+  }
+  async removeRecord(key) { await this.client.fs.rm(this.index, `${ROOT}/nodes/${recordKey(key)}`, 'LayerCache prune node'); }
   async close() { try { await this.client.close(); } finally { await this.release(); } }
 }

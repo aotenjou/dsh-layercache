@@ -8,6 +8,7 @@ import { LocalBackend } from '../src/backends/local.js';
 
 const latencyMs = Number(process.env.TOOL_LATENCY_MS ?? 20);
 const registry = () => new ToolRegistry().register('step', {
+  randomness: 'none',
   version: '1',
   execute: async (env, { value }) => {
     await new Promise(r => setTimeout(r, latencyMs));

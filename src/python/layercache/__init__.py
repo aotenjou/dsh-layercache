@@ -36,7 +36,11 @@ class Client:
         headers = {"Content-Type": "application/json"}
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
-        request = urllib.request.Request(self.url + path, data=None if data is None else json.dumps(data, allow_nan=False).encode(), headers=headers)
+        request = urllib.request.Request(
+            self.url + path,
+            data=None if data is None else json.dumps(data, allow_nan=False).encode(),
+            headers=headers,
+        )
         try:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
                 return json.load(response)
@@ -47,17 +51,36 @@ class Client:
                 raise LayerCacheError("HTTPError", f"HTTP {error.code}") from error
             raise LayerCacheError(payload["code"], payload["message"], payload.get("detail")) from error
         except (urllib.error.URLError, TimeoutError) as error:
-            # The server might have committed a result: never replay automatically.
             raise LayerCacheError("TransportError", str(error)) from error
 
-    def run(self, task: str, history: Sequence[ToolCall | dict], rollout: str | None = None) -> dict:
-        data = {"task": task, "history": [c.to_dict() if isinstance(c, ToolCall) else c for c in history]}
+    def prepare(self, task: str, candidate_tools: Sequence[str]) -> dict:
+        return self._request("/v1/prepare", {"task": task, "candidate_tools": list(candidate_tools)})
+
+    def refresh_resources(self, resources: Sequence[Mapping[str, Any]]) -> dict:
+        return self._request("/v1/resources/refresh", {"resources": list(resources)})
+
+    def run(
+        self,
+        task: str,
+        history: Sequence[ToolCall | dict],
+        rollout: str | None = None,
+        candidate_tools: Sequence[str] | None = None,
+    ) -> dict:
+        data = {"task": task, "history": [call.to_dict() if isinstance(call, ToolCall) else call for call in history]}
         if rollout is not None:
             data["rollout"] = rollout
+        if candidate_tools is not None:
+            data["candidate_tools"] = list(candidate_tools)
         return self._request("/v1/run", data)
 
-    def open_rollout(self, task: str) -> str:
-        return self._request("/v1/rollouts", {"task": task})["rollout"]
+    def open_rollout(self, task: str, candidate_tools: Sequence[str] | None = None) -> str:
+        return self.open_rollout_info(task, candidate_tools)["rollout"]
+
+    def open_rollout_info(self, task: str, candidate_tools: Sequence[str] | None = None) -> dict:
+        data = {"task": task}
+        if candidate_tools is not None:
+            data["candidate_tools"] = list(candidate_tools)
+        return self._request("/v1/rollouts", data)
 
     def close_rollout(self, rollout: str) -> None:
         self._request("/v1/rollouts/close", {"rollout": rollout})
@@ -70,28 +93,40 @@ class Client:
 
 
 class AsyncExecutor:
-    """TVCache-style execute(full_history) API returning the last tool value.
+    """TVCache-style execute(full_history) API returning the last tool value."""
 
-    Tools are registered in the Node service; Python sends serializable calls.
-    Calls on one executor are serialized. Different rollouts use distinct instances.
-    """
-    def __init__(self, task_id: str, client: Client | None = None):
+    def __init__(
+        self,
+        task_id: str,
+        client: Client | None = None,
+        candidate_tools: Sequence[str] | None = None,
+    ):
         self.task_id = task_id
         self.client = client or Client()
+        self.candidate_tools = tuple(sorted(set(candidate_tools))) if candidate_tools is not None else None
         self.last_result: dict | None = None
+        self.preflight_result: dict | None = None
         self._lock = asyncio.Lock()
         self.rollout_id: str | None = None
         self._closed = False
 
     async def execute(self, history: Sequence[ToolCall | dict]) -> Any:
-        # Freeze caller-owned arguments before the worker thread sees them.
-        frozen = json.loads(json.dumps([c.to_dict() if isinstance(c, ToolCall) else c for c in history], allow_nan=False))
+        frozen = json.loads(json.dumps(
+            [call.to_dict() if isinstance(call, ToolCall) else call for call in history],
+            allow_nan=False,
+        ))
         async with self._lock:
             if self._closed:
                 raise LayerCacheError("Closed", "Executor is closed")
             if self.rollout_id is None:
-                self.rollout_id = await asyncio.to_thread(self.client.open_rollout, self.task_id)
-            self.last_result = await asyncio.to_thread(self.client.run, self.task_id, frozen, self.rollout_id)
+                rollout = await asyncio.to_thread(
+                    self.client.open_rollout_info, self.task_id, self.candidate_tools
+                )
+                self.rollout_id = rollout["rollout"]
+                self.preflight_result = rollout.get("preflight")
+            self.last_result = await asyncio.to_thread(
+                self.client.run, self.task_id, frozen, self.rollout_id
+            )
             return self.last_result["value"]
 
     async def close(self) -> None:

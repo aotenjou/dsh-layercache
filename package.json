@@ -44,7 +44,7 @@
     "logo.svg"
   ],
   "scripts": {
-    "test": "node --test --test-timeout=90000 test/backend.test.js test/cache.test.js test/server.test.js test/dsh.test.js",
+    "test": "node --test --test-concurrency=1 --test-timeout=90000 test/backend.test.js test/cache.test.js test/consistency.test.js test/server.test.js test/dsh.test.js test/dsh.multi-client.test.js",
     "test:python": "python -m unittest discover -s test -p test_python.py -v",
     "test:layerfs": "node --test test/layerfs.integration.js test/layerfs.shell.integration.js",
     "demo": "node examples/branching.js",

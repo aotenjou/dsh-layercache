@@ -46,11 +46,9 @@ Python `ToolCallEnv` constructors, test-result special cases and fork-bank APIs
 are not exported. An HTTP response that is lost is not automatically resent.
 The migration changes the state representation and authority model explicitly.
 
-## Why scope the cache more strictly?
+## Cache scope
 
-A task name and textually identical tool calls are insufficient if their seed
-files, runtime image, dataset, model or tool implementation changed. LayerCache
-hashes the immutable seed and tool version registry, and accepts explicit context
-for other dependencies. This makes sharing across post-training epochs possible
-without treating all runs as interchangeable. Avoid placing model-generated
-reasoning in task IDs; use arguments/context only for actual tool dependencies.
+LayerCache groups calls by task ID, namespace, pinned initial snapshot,
+tool registry fingerprint and explicit context. Reuse can span training epochs.
+Version fixed experiment inputs in the configured context and declare changing
+dependencies through the resource API.

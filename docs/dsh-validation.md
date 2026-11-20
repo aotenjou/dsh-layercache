@@ -14,10 +14,10 @@
 
 | Check | Outcome and scope |
 | --- | --- |
-| `npm test` | PASS, 27 tests, 0 skipped: 23 core cases plus 4 real Cordis/dsh pipeline cases |
+| `npm test` | PASS, 40 tests, 0 skipped: consistency cases, multi-client coverage, 4 real Cordis/dsh pipeline cases, HTTP and legacy-record coverage |
 | `npm run check` | PASS; includes plugin, service, scripts, examples and tests |
-| Python integration | PASS, 4 tests through the actual HTTP service |
-| `test-layerfs-docker.py --dsh --image node:24-bookworm-slim ...` | PASS, 1 real scenario, 0 failed/0 skipped |
+| Python integration | PASS, 5 tests through the actual HTTP service |
+| `test-layerfs-docker.py --dsh --image node:24-bookworm-slim ...` | PASS, 2 real subtests, 0 failed/0 skipped |
 | Docker resource inspection | PASS, no remaining test containers or labeled volumes |
 | Official `dsh plugin --profile web add ...tgz` | PASS in a fresh isolated DSH_HOME; profile lists the bundle |
 | `dsh --profile web --dump-config` | PASS, plugin layer and row present |

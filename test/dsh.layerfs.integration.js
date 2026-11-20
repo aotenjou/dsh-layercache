@@ -22,7 +22,7 @@ test('dsh tool pipeline -> HTTP -> real LayerFS Store/FUSE: divergence, replay, 
     const { LayerFS } = await import(sdkModule);
     const initial = await LayerFS.init('dsh-layercache', source); await initial.close();
     const backend = await LayerFSBackend.open({ project: 'dsh-layercache', lockPath: join(root, 'owner.lock'), sdkModule });
-    cache = new LayerCache({ backend, registry: fileTools(), baseRef: backend.baseRef });
+    cache = new LayerCache({ backend, registry: fileTools({ cacheShell: true }), baseRef: backend.baseRef });
     service = await serve(cache, { port: 0 });
     ({ ctx } = await mount(service.url, { backend: 'layerfs', allowedTools: ['shell', 'file.read'] }));
     const agent = caller('real-dsh-session');

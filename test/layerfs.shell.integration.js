@@ -19,13 +19,14 @@ test('real Docker/FUSE Workspace: shell commit, branch divergence, cache hit, cl
     const initial = await LayerFS.init('layercache-shell', source);
     await initial.close();
     const backend = await LayerFSBackend.open({ project: 'layercache-shell', lockPath: join(root, 'owner.lock'), sdkModule });
-    cache = new LayerCache({ backend, registry: fileTools(), baseRef: backend.baseRef });
+    cache = new LayerCache({ backend, registry: fileTools({ cacheShell: true }), baseRef: backend.baseRef });
     const prefix = { name: 'shell', arguments: { command: "printf '%s' shared > state.txt; cat state.txt" } };
     const branch = suffix => [prefix, { name: 'shell', arguments: { command: `printf '%s' ${suffix} >> state.txt; cat state.txt` } }];
     assert.equal((await cache.run('task', branch('A'))).value.stdout, 'sharedA');
     const second = await cache.run('task', branch('B'));
     assert.equal(second.value.stdout, 'sharedB'); assert.equal(second.hits, 1);
     assert.equal((await cache.run('task', branch('A'))).executed, 0);
+    await cache.drainPublications();
     const before = (await cache.tree()).nodes.length;
     await assert.rejects(cache.run('failure', [{ name: 'shell', arguments: { command: 'echo failed > failed.txt; exit 7' } }]), { code: 'ToolFailed' });
     assert.equal((await cache.tree()).nodes.length, before);

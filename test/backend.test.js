@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LayerFSBackend } from '../src/backends/layerfs.js';
 import { LayerCache, ToolRegistry } from '../src/index.js';
+import { digest } from '../src/identity.js';
 import { LocalBackend } from '../src/backends/local.js';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -46,7 +47,7 @@ test('close drains even noncacheable execution before releasing the backend', as
   const root = await mkdtemp(join(tmpdir(), 'layercache-close-'));
   const backend = await LocalBackend.open(root);
   let finish;
-  const registry = new ToolRegistry().register('wait', { version: '1', cacheable: false, execute: async () => { await new Promise(r => { finish = r; }); return 'ok'; } });
+  const registry = new ToolRegistry().register('wait', { version: '1', randomness: 'none', cacheable: false, execute: async () => { await new Promise(r => { finish = r; }); return 'ok'; } });
   const cache = new LayerCache({ backend, registry, baseRef: backend.baseRef });
   const work = cache.run('task', [{ name: 'wait' }]);
   while (!finish) await new Promise(r => setTimeout(r, 1));
@@ -57,18 +58,25 @@ test('close drains even noncacheable execution before releasing the backend', as
   await assert.rejects(cache.run('task', [{ name: 'wait' }]), { code: 'Closed' });
   await rm(root, { recursive: true, force: true });
 });
-test('time buckets invalidate a whole state chain and allow fresh records', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'layercache-ttl-'));
+test('new rollouts reuse cached state as time passes', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'layercache-time-'));
   const backend = await LocalBackend.open(root);
-  const registry = new ToolRegistry().register('value', { version: '1', mutates: false, execute: async () => 'ok' });
-  const cache = new LayerCache({ backend, registry, baseRef: backend.baseRef, ttlMs: 1000 });
-  const now = Date.now;
+  const registry = new ToolRegistry().register('value', { version: '1', mutates: false, randomness: 'none', execute: async () => 'ok' });
+  const cache = new LayerCache({ backend, registry, baseRef: backend.baseRef });
+  const history = [{ name: 'value' }];
+  let now = Date.UTC(2026, 0, 1);
+  t.mock.method(Date, 'now', () => now);
   try {
-    Date.now = () => 10000;
-    assert.equal((await cache.run('t', [{ name: 'value' }])).hits, 0);
-    assert.equal((await cache.run('t', [{ name: 'value' }])).hits, 1);
-    Date.now = () => 11000;
-    assert.equal((await cache.run('t', [{ name: 'value' }])).hits, 0);
-    assert.equal((await cache.run('t', [{ name: 'value' }])).hits, 1);
-  } finally { Date.now = now; await cache.close(); await rm(root, { recursive: true, force: true }); }
+    const first = await cache.run('t', history);
+    assert.equal(first.hits, 0);
+    assert.equal(first.scope, digest({ schema: 1, namespace: 'default', task: 't', baseRef: backend.baseRef, tools: registry.fingerprint(), context: {} }));
+    await cache.drainPublications();
+
+    now = Date.UTC(2027, 0, 1);
+    const session = cache.openRollout('t');
+    const replay = await cache.run('t', history, session);
+    assert.equal(session.scope, first.scope);
+    assert.equal(replay.scope, first.scope);
+    assert.equal(replay.hits, 1);
+  } finally { await cache.close(); await rm(root, { recursive: true, force: true }); }
 });

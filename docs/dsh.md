@@ -67,9 +67,16 @@ Arguments:
 | --- | --- |
 | `task_id` | Stable dataset/sample identity; equivalent trajectories may reuse it |
 | `rollout` | Required trajectory label, local to the calling dsh session |
+| `candidate_tools` | Optional list of tool names to preflight for this rollout. Defaults to the allowlist. |
 | `history` | Complete nonempty append-only array of `{name, arguments?, cache?}` |
 
-The result is `{task_id, rollout, value, ref, executed, cache_hits, continued}`.
+Use `tvcache_prepare` to preview a candidate list before starting a rollout.
+Supply the same candidates when calling `tvcache_run`. A registered tool
+omitted from an explicit list is tracked in `unknown_tools` and disables
+sharing from its first invocation. The plugin still checks its allowlist.
+
+The result includes `task_id`, `rollout`, `value`, `ref`, `executed`,
+`cache_hits`, `continued`, `preflight` and `unknown_tools`.
 `value` is the last tool's JSON value. `ref` is its immutable state reference.
 `cache_hits` counts cross-trajectory reuse; `continued` counts already-completed
 steps in the current session. These counts are distinct. The same metadata is
