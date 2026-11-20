@@ -99,6 +99,24 @@ node src/cli.js serve --backend local --root /private/layercache-demo
 
 同时必须在 dsh 插件配置中明确设置 `backend: local`。它不提供安全沙箱。
 
+## 视频工具基准
+
+两组都在 LayerFS 1.1.0 上执行固定轨迹，调用同样的 FFmpeg 预处理和 LayerFS
+产物读取工具。无缓存组为每一步设置 `cache: false`。加速比为无缓存耗时除以缓存耗时。
+
+| 工作负载 | 计时口径 | 无缓存 | LayerCache | 加速比 | 缓存命中 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Terminal-Bench 1 `video-processing`，2 个视频 | 3 轮单组墙钟时间的均值，每轮每组 8 个 rollout | 11.65 秒 | 1.78 秒 | **6.54×** | 84/96 |
+| EgoSchema，固定清单的 100 个视频 | 逐视频耗时求和，每组每视频 4 个 rollout，最多 8 个视频并发 | 6,881.16 秒 | 1,733.95 秒 | **3.97×** | 600/800 |
+
+- Terminal-Bench 使用提交 `d28711d` 中的示例和测试视频。3 轮中两组的帧哈希和产物均一致。
+  [任务视频](https://github.com/harbor-framework/terminal-bench-1/tree/d28711d0da2675d0bb1d56de45ae5df6082438a3/original-tasks/video-processing)
+- EgoSchema 的 100 个视频共 2.06 GB。100 个视频的帧哈希和产物均一致。
+  [视频来源](https://huggingface.co/datasets/lmms-eval/egoschema)
+
+两个实验均用 FFmpeg 4.4.2 以 15 fps 采样，缩放到 1920×1080 并对灰度帧计算哈希。
+计时覆盖工具执行和同步发布版本的缓存开销，模型生成、训练和官方任务评分均在测量范围之外。
+
 ## 测试、边界和开源
 
 默认测试使用真实发布版 Cordis/dsh 工具执行链，不需要模型 API Key 或 Docker。
@@ -108,7 +126,7 @@ node src/cli.js serve --backend local --root /private/layercache-demo
 
 文件快照不保存 RAM、网络连接和 GPU 状态。LayerFS 当前为 Disposable 模式；
 不承诺掉电持久性。一个项目索引只运行一个服务；删除缓存索引不会回收历史空间。
-没有 GPU 训练效果或 LayerFS 性能提升声明，本版本不支持 LayerFS 2.0。
+本项目支持 LayerFS 1.1.0。`npm run benchmark` 示例使用模拟工具延迟。
 shell 会在服务环境中执行代码，插件默认白名单不含 shell；只向可信调用方开放服务。
 
 仓库包含插件 bundle、缓存服务、Python 客户端、测试、CI、许可证和中英文文档。

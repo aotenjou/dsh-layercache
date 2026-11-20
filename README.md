@@ -8,7 +8,7 @@ both tool observations and immutable filesystem states; diverging trajectories f
 independent Branches. This is an independent Apache-2.0 implementation inspired by
 [TVCache](https://github.com/TVCache/TVCache), not its original HTTP protocol.
 
-The bundle registers `tvcache_run` and `tvcache_close`. They run through dsh's normal
+The source bundle registers `tvcache_prepare`, `tvcache_run` and `tvcache_close`. They run through dsh's normal
 tool policy and result logging, with cache-hit/execution counts and snapshot refs in
 result metadata. Existing dsh tools continue to use their own execution environments.
 
@@ -93,6 +93,28 @@ The explicit directory reference demo produces A, divergent B, then replay A:
 start `node src/cli.js serve --backend local --root /private/layercache-demo`
 and explicitly configure `backend: local` in dsh. There is no fallback.
 
+## Video tool benchmarks
+
+Fixed tool traces on LayerFS 1.1.0 ran the same FFmpeg preprocessing and
+LayerFS artifact reads in both arms. The baseline passed `cache: false`
+for every call. Speedup is baseline time divided by cached time.
+
+| Workload | Time measured | Cache off | LayerCache | Speedup | Cache hits |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Terminal-Bench 1 `video-processing`, 2 fixtures | Mean per-arm wall time across 3 trials, 8 rollouts per arm per trial | 11.65 s | 1.78 s | **6.54×** | 84/96 |
+| EgoSchema, fixed 100-video manifest | Sum of per-video elapsed times, 4 rollouts per video per arm, up to 8 videos in flight | 6,881.16 s | 1,733.95 s | **3.97×** | 600/800 |
+
+- Terminal-Bench used the task's example and test videos at commit
+  `d28711d`. The frame digests and artifact outputs matched across both arms in
+  all 3 trials. [Task fixtures](https://github.com/harbor-framework/terminal-bench-1/tree/d28711d0da2675d0bb1d56de45ae5df6082438a3/original-tasks/video-processing)
+- EgoSchema used 100 videos totaling 2.06 GB. The frame digests and artifact
+  outputs matched for all 100 videos. [Video source](https://huggingface.co/datasets/lmms-eval/egoschema)
+
+Both experiments used FFmpeg 4.4.2 to sample at 15 fps, scale to 1920×1080,
+and hash grayscale frames. These measurements cover tool execution and
+cache overhead with synchronous publication. They exclude model generation,
+training, and official task scoring.
+
 ## Development
 
 ```sh
@@ -114,9 +136,9 @@ without dsh; see [API](docs/api.md), [design](docs/architecture.md) and
 
 Filesystem history does not capture RAM, sockets or GPU state. LayerFS's tested
 Store profile is Disposable, without power-loss durability. One service owns each
-project/index. Pruning reuse records does not reclaim LayerFS history. There is
-no GPU training/quality or LayerFS performance claim; the benchmark deliberately
-adds synthetic tool latency. LayerFS 2.0 is not supported by this release.
+project/index. Pruning reuse records does not reclaim LayerFS history. The
+`npm run benchmark` example uses synthetic tool latency. The video results above
+measure the stated fixed traces. The supported LayerFS version is 1.1.0.
 
 Shell executes code with the service/runtime's privileges. Only trusted callers
 may use this service; `allowedTools` limits the plugin's tools, not other clients
